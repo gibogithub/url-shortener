@@ -1,19 +1,11 @@
 export const metadata = {
-  title: 'URL Shortening Service | Web Utility',
-  description: 'A free URL shortening microservice for developers',
+  title: 'Web URL Shortener | Guilbert Paz',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        <link
-          rel="icon"
-          type="image/png"
-          href="https://cdn.freecodecamp.org/universal/favicons/favicon-16x16.png"
-        />
-      </head>
-      <body>
+      <body style={{ margin: 0, padding: 0 }}>
         {children}
       </body>
     </html>

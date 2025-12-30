@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// Pre-populate with the example data
 const urlDatabase = new Map([
   [1, 'https://www.google.com'],
   [2, 'https://www.github.com'],
@@ -22,7 +21,6 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'invalid url' });
     }
     
-    // Redirect with 302 status (temporary redirect)
     return NextResponse.redirect(originalUrl, 302);
     
   } catch (error) {
