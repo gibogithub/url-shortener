@@ -1,65 +1,154 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+
+// Simple in-memory storage (will reset on server restart)
+let urlCounter = 3; // Start at 3 to match the example
+const urlMap = new Map([
+  [1, 'https://www.google.com'],
+  [2, 'https://www.github.com'],
+  [3, 'https://forum.freecodecamp.org/']
+]);
 
 export default function Home() {
+  const [url, setUrl] = useState('');
+  const [result, setResult] = useState(null);
+  const [baseUrl, setBaseUrl] = useState('');
+
+  useEffect(() => {
+    // This only runs on client side
+    setBaseUrl(window.location.origin);
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Simple URL validation
+    const urlPattern = /^https?:\/\/\S+\.\S+/;
+    if (!urlPattern.test(url)) {
+      setResult({ error: 'invalid url' });
+      return;
+    }
+    
+    // Check if URL already exists
+    let shortId;
+    for (const [id, originalUrl] of urlMap.entries()) {
+      if (originalUrl === url) {
+        shortId = id;
+        break;
+      }
+    }
+    
+    // If not found, create new short URL
+    if (!shortId) {
+      urlCounter++;
+      shortId = urlCounter;
+      urlMap.set(shortId, url);
+    }
+    
+    setResult({
+      original_url: url,
+      short_url: shortId
+    });
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div style={styles.container}>
+      <h1>URL Shortener Microservice</h1>
+      
+      <section style={styles.section}>
+        <h2>Short URL Creation</h2>
+        <p>Example: POST [project_url]/api/shorturl - https://www.google.com</p>
+        
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://www.example.com"
+            style={styles.input}
+          />
+          <button type="submit" style={styles.button}>POST URL</button>
+        </form>
+      </section>
+      
+      {result && (
+        <section style={styles.section}>
+          <h3>Result:</h3>
+          <pre style={styles.result}>
+            {JSON.stringify(result, null, 2)}
+          </pre>
+          {!result.error && (
+            <div>
+              <p>
+                <a href={`/api/shorturl/${result.short_url}`}>
+                  /api/shorturl/{result.short_url}
+                </a>
+              </p>
+              <p>Will redirect to: {result.original_url}</p>
+            </div>
+          )}
+        </section>
+      )}
+      
+      <section style={styles.section}>
+        <h3>Example Usage:</h3>
+        <div>
+          <p>
+            <a href="/api/shorturl/3">
+              {baseUrl ? `${baseUrl}/api/shorturl/3` : '/api/shorturl/3'}
+            </a>
           </p>
+          <p>Will redirect to: https://forum.freecodecamp.org/</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+      
+      <footer style={styles.footer}>
+        <p>By freeCodeCamp</p>
+      </footer>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '20px',
+    fontFamily: 'Arial, sans-serif'
+  },
+  section: {
+    backgroundColor: '#f5f5f5',
+    padding: '20px',
+    margin: '20px 0',
+    borderRadius: '5px'
+  },
+  form: {
+    display: 'flex',
+    gap: '10px',
+    marginTop: '10px'
+  },
+  input: {
+    flex: 1,
+    padding: '10px',
+    fontSize: '16px'
+  },
+  button: {
+    padding: '10px 20px',
+    backgroundColor: '#0070f3',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer'
+  },
+  result: {
+    backgroundColor: '#eee',
+    padding: '10px',
+    borderRadius: '4px'
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: '40px',
+    color: '#666'
+  }
+};
