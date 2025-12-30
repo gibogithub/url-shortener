@@ -1,17 +1,26 @@
 # URL Shortener Microservice
 
-A Next.js implementation of freeCodeCamp's URL Shortener Microservice project.
+A modern URL shortening service built with Next.js that passes all freeCodeCamp tests.
 
 ## Features
-- Shorten URLs via POST `/api/shorturl`
-- Redirect via GET `/api/shorturl/:id`
-- DNS-based URL validation
-- In-memory storage
+- ✅ URL shortening via POST `/api/shorturl`
+- ✅ Redirect via GET `/api/shorturl/:id`
+- ✅ DNS-based URL validation
+- ✅ Clean, centered UI design
+- ✅ No database required (in-memory storage)
 
 ## Live Demo
-[Add your live URL here]
+[Add your Vercel deployment URL here]
 
-## Local Development
-```bash
-npm install
-npm run dev
+## API Endpoints
+
+### POST `/api/shorturl`
+**Request:**
+```json
+{"url": "https://www.example.com"}
+
+Author
+Guilbert Paz
+
+License
+MIT

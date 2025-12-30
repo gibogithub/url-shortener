@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import dns from 'dns/promises';
 
-// In-memory storage (Vercel serverless - resets between invocations)
-let urlCounter = 3; // Start at 3 to match example
+// In-memory storage
+let urlCounter = 3;
 const urlDatabase = new Map([
   [1, 'https://www.google.com'],
   [2, 'https://www.github.com'],
@@ -16,7 +16,7 @@ const urlToId = new Map([
 
 export async function POST(request) {
   try {
-    // Handle both form data and JSON
+    // Body parsing middleware (automatic in Next.js)
     const contentType = request.headers.get('content-type') || '';
     let url;
     
@@ -32,7 +32,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'invalid url' });
     }
     
-    // Validate URL
+    // Validate URL format
     let urlObj;
     try {
       urlObj = new URL(url);
@@ -43,14 +43,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'invalid url' });
     }
     
-    // DNS lookup (REQUIRED for tests)
+    // DNS LOOKUP - REQUIRED BY FREECODECAMP HINT
     try {
       await dns.lookup(urlObj.hostname);
     } catch {
       return NextResponse.json({ error: 'invalid url' });
     }
     
-    // Check if exists
+    // Check if URL already exists
     if (urlToId.has(url)) {
       return NextResponse.json({
         original_url: url,
@@ -58,7 +58,7 @@ export async function POST(request) {
       });
     }
     
-    // Create new
+    // Create new short URL
     const short_url = ++urlCounter;
     urlDatabase.set(short_url, url);
     urlToId.set(url, short_url);
