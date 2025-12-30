@@ -1,50 +1,69 @@
 import { NextResponse } from 'next/server';
+import dns from 'dns/promises';
 
-// In-memory storage for server
-let urlCounter = 3;
-const urlMap = new Map([
-  [1, 'https://www.google.com'],
-  [2, 'https://www.github.com'],
-  [3, 'https://forum.freecodecamp.org/']
-]);
+// In-memory storage
+let urlCounter = 1;
+const urlDatabase = new Map(); // short_url -> original_url
+const urlToId = new Map(); // original_url -> short_url
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { url } = body;
+    const contentType = request.headers.get('content-type');
+    
+    let url;
+    
+    // Handle both form data and JSON
+    if (contentType && contentType.includes('application/x-www-form-urlencoded')) {
+      const formData = await request.formData();
+      url = formData.get('url');
+    } else {
+      const body = await request.json();
+      url = body.url;
+    }
     
     if (!url) {
       return NextResponse.json({ error: 'invalid url' });
     }
     
-    // Simple URL validation
-    const urlPattern = /^https?:\/\/\S+\.\S+/;
-    if (!urlPattern.test(url)) {
+    // Validate URL format
+    let urlObj;
+    try {
+      urlObj = new URL(url);
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        throw new Error('Invalid protocol');
+      }
+    } catch (err) {
+      return NextResponse.json({ error: 'invalid url' });
+    }
+    
+    // Perform DNS lookup (REQUIRED by freeCodeCamp)
+    try {
+      await dns.lookup(urlObj.hostname);
+    } catch (err) {
       return NextResponse.json({ error: 'invalid url' });
     }
     
     // Check if URL already exists
-    let shortId;
-    for (const [id, originalUrl] of urlMap.entries()) {
-      if (originalUrl === url) {
-        shortId = id;
-        break;
-      }
+    if (urlToId.has(url)) {
+      const short_url = urlToId.get(url);
+      return NextResponse.json({
+        original_url: url,
+        short_url: short_url
+      });
     }
     
-    // If not found, create new
-    if (!shortId) {
-      urlCounter++;
-      shortId = urlCounter;
-      urlMap.set(shortId, url);
-    }
+    // Create new short URL
+    const short_url = urlCounter++;
+    urlDatabase.set(short_url, url);
+    urlToId.set(url, short_url);
     
     return NextResponse.json({
       original_url: url,
-      short_url: shortId
+      short_url: short_url
     });
     
   } catch (error) {
+    console.error('Error:', error);
     return NextResponse.json({ error: 'invalid url' });
   }
 }

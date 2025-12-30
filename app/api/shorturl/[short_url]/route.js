@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-// Same in-memory storage
-const urlMap = new Map([
+// Pre-populate with the example data
+const urlDatabase = new Map([
   [1, 'https://www.google.com'],
   [2, 'https://www.github.com'],
   [3, 'https://forum.freecodecamp.org/']
@@ -13,28 +13,19 @@ export async function GET(request, { params }) {
     const shortId = parseInt(short_url);
     
     if (isNaN(shortId)) {
-      return NextResponse.json(
-        { error: 'invalid url' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'invalid url' });
     }
     
-    const originalUrl = urlMap.get(shortId);
+    const originalUrl = urlDatabase.get(shortId);
     
     if (!originalUrl) {
-      return NextResponse.json(
-        { error: 'No short URL found for the given input' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'invalid url' });
     }
     
-    // Redirect to original URL
-    return NextResponse.redirect(originalUrl);
+    // Redirect with 302 status (temporary redirect)
+    return NextResponse.redirect(originalUrl, 302);
     
   } catch (error) {
-    return NextResponse.json(
-      { error: 'invalid url' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'invalid url' });
   }
 }
